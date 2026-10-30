@@ -71,12 +71,12 @@ static int outCode(float x, float y, float xmin, float ymin, float xmax, float y
 
 bool clipLineCohenSutherland(float& x0, float& y0, float& x1, float& y1,
                              float xmin, float ymin, float xmax, float ymax,
-                             int* oc0, int* oc1)
+                             int* outcode0, int* outcode1)
 {
     int c0 = outCode(x0, y0, xmin, ymin, xmax, ymax);
     int c1 = outCode(x1, y1, xmin, ymin, xmax, ymax);
-    if (oc0) *oc0 = c0;
-    if (oc1) *oc1 = c1;
+    if (outcode0) *outcode0 = c0;
+    if (outcode1) *outcode1 = c1;
 
     for (int guard = 0; guard < 8; guard++)
     {

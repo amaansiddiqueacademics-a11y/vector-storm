@@ -198,6 +198,7 @@ int comboTimer = 0; // Frames before combo expires
 bool gameOver = false;
 bool paused = false;
 int lastRunRank = 0;   // leaderboard place of the run that just ended (0 = did not place)
+int gameOverInputLock = 0;   // frames the Game Over buttons ignore Space/Enter (so a fire tap can't skip it)
 int menuSelectedIdx = 0;
 
 // Forward declarations
@@ -215,6 +216,7 @@ void triggerGameOver()
     playSfx(SFX_GAME_OVER, 1.0f);
     if (score > highScore) highScore = score;
     lastRunRank = SaveSystem::registerScore(score, currentSector + 1);
+    gameOverInputLock = 45;   // 0.75 s
 }
 
 // ======================================================
@@ -776,7 +778,7 @@ void drawBoss(const BossShip &b)
 
     // Boss Name Tag
     char bossTag[64];
-    sprintf(bossTag, "%s [%d / %d]", b.name, b.hp, b.maxHp);
+    snprintf(bossTag, sizeof(bossTag), "%s [%d / %d]", b.name, b.hp, b.maxHp);
     renderGlText(barX, barY + 16.0f, bossTag, GLUT_BITMAP_HELVETICA_12);
 }
 
@@ -809,11 +811,11 @@ void drawHUD()
     char comboText[64];
     char empText[64];
 
-    sprintf(scoreText, "SCORE: %d", score);
-    sprintf(highText, "HIGH: %d", highScore);
-    sprintf(sectorText, "%s", sectorThemes[currentSector % NUM_SECTORS].name);
-    sprintf(livesText, "LIVES: %d", lives);
-    sprintf(empText, "EMP [B]: %d", empBombsStock);
+    snprintf(scoreText, sizeof(scoreText), "SCORE: %d", score);
+    snprintf(highText, sizeof(highText), "HIGH: %d", highScore);
+    snprintf(sectorText, sizeof(sectorText), "%s", sectorThemes[currentSector % NUM_SECTORS].name);
+    snprintf(livesText, sizeof(livesText), "LIVES: %d", lives);
+    snprintf(empText, sizeof(empText), "EMP [B]: %d", empBombsStock);
 
     // Top HUD Bar background banner
     glEnable(GL_BLEND);
@@ -881,7 +883,7 @@ void drawHUD()
     if (shieldHealth > 0)
     {
         char buf[32];
-        sprintf(buf, "[SHIELD: %d]", shieldHealth);
+        snprintf(buf, sizeof(buf), "[SHIELD: %d]", shieldHealth);
         glColor3f(0.1f, 0.85f, 1.0f);
         renderGlText(powerUpX, powerUpY, buf, GLUT_BITMAP_HELVETICA_12);
         powerUpX += 95.0f;
@@ -890,7 +892,7 @@ void drawHUD()
     if (pentaShotTimer > 0)
     {
         char buf[32];
-        sprintf(buf, "[PENTA: %ds]", pentaShotTimer / 60);
+        snprintf(buf, sizeof(buf), "[PENTA: %ds]", pentaShotTimer / 60);
         glColor3f(0.95f, 0.2f, 1.0f);
         renderGlText(powerUpX, powerUpY, buf, GLUT_BITMAP_HELVETICA_12);
         powerUpX += 95.0f;
@@ -898,7 +900,7 @@ void drawHUD()
     else if (tripleShotTimer > 0)
     {
         char buf[32];
-        sprintf(buf, "[TRIPLE: %ds]", tripleShotTimer / 60);
+        snprintf(buf, sizeof(buf), "[TRIPLE: %ds]", tripleShotTimer / 60);
         glColor3f(1.0f, 0.85f, 0.1f);
         renderGlText(powerUpX, powerUpY, buf, GLUT_BITMAP_HELVETICA_12);
         powerUpX += 95.0f;
@@ -907,7 +909,7 @@ void drawHUD()
     if (rapidFireTimer > 0)
     {
         char buf[32];
-        sprintf(buf, "[RAPID: %ds]", rapidFireTimer / 60);
+        snprintf(buf, sizeof(buf), "[RAPID: %ds]", rapidFireTimer / 60);
         glColor3f(1.0f, 0.3f, 0.3f);
         renderGlText(powerUpX, powerUpY, buf, GLUT_BITMAP_HELVETICA_12);
         powerUpX += 95.0f;
@@ -916,7 +918,7 @@ void drawHUD()
     if (speedBoostTimer > 0)
     {
         char buf[32];
-        sprintf(buf, "[SPEED: %ds]", speedBoostTimer / 60);
+        snprintf(buf, sizeof(buf), "[SPEED: %ds]", speedBoostTimer / 60);
         glColor3f(0.0f, 1.0f, 0.85f);
         renderGlText(powerUpX, powerUpY, buf, GLUT_BITMAP_HELVETICA_12);
         powerUpX += 95.0f;
@@ -925,7 +927,7 @@ void drawHUD()
     if (timeSlowTimer > 0)
     {
         char buf[32];
-        sprintf(buf, "[CHRONO: %ds]", timeSlowTimer / 60);
+        snprintf(buf, sizeof(buf), "[CHRONO: %ds]", timeSlowTimer / 60);
         glColor3f(0.3f, 0.7f, 1.0f);
         renderGlText(powerUpX, powerUpY, buf, GLUT_BITMAP_HELVETICA_12);
     }
@@ -933,7 +935,7 @@ void drawHUD()
     // Combo Multiplier indicator
     if (comboCount > 1 && comboTimer > 0)
     {
-        sprintf(comboText, "COMBO x%d!", comboCount);
+        snprintf(comboText, sizeof(comboText), "COMBO x%d!", comboCount);
         float comboAlpha = (float)comboTimer / 120.0f;
         glColor4f(1.0f, 0.9f, 0.1f, comboAlpha);
         renderGlText(WIDTH - 130, HEIGHT - 72, comboText, GLUT_BITMAP_HELVETICA_18);
@@ -1059,7 +1061,7 @@ void drawSlider(float x, float y, float w, float h, const char* label, float val
 
     // Label and percent text
     char displayStr[64];
-    sprintf(displayStr, "%s: %d%%", label, (int)(value * 100.0f));
+    snprintf(displayStr, sizeof(displayStr), "%s: %d%%", label, (int)(value * 100.0f));
     glColor3f(selected ? 1.0f : 0.85f, 1.0f, selected ? 0.3f : 0.9f);
     renderGlText(x + 15.0f, y + 14.0f, displayStr, GLUT_BITMAP_HELVETICA_12);
 }
@@ -1373,18 +1375,18 @@ void drawCgLabPanel()
     char buf[96];
     float y = top - 18.0f;
     glColor3f(0.2f, 0.95f, 1.0f);
-    sprintf(buf, "CG LAB  [F1]                  %3.0f FPS", cgFps);
+    snprintf(buf, sizeof(buf), "CG LAB  [F1]                  %3.0f FPS", cgFps);
     renderGlText(x + 10, y, buf, GLUT_BITMAP_HELVETICA_12); y -= 22.0f;
 
     glColor3f(1.0f, 0.85f, 0.2f);
     renderGlText(x + 10, y, "Ship model matrix  M = T(p) R(bank) S T(-p)", GLUT_BITMAP_HELVETICA_10); y -= 15.0f;
     glColor3f(0.9f, 0.95f, 1.0f);
-    sprintf(buf, "| %6.3f %6.3f %8.2f |", shipM[0], shipM[2], shipM[4]);
+    snprintf(buf, sizeof(buf), "| %6.3f %6.3f %8.2f |", shipM[0], shipM[2], shipM[4]);
     renderGlText(x + 20, y, buf, GLUT_BITMAP_HELVETICA_12); y -= 15.0f;
-    sprintf(buf, "| %6.3f %6.3f %8.2f |", shipM[1], shipM[3], shipM[5]);
+    snprintf(buf, sizeof(buf), "| %6.3f %6.3f %8.2f |", shipM[1], shipM[3], shipM[5]);
     renderGlText(x + 20, y, buf, GLUT_BITMAP_HELVETICA_12); y -= 15.0f;
     renderGlText(x + 20, y, "| 0.000  0.000     1.00 |", GLUT_BITMAP_HELVETICA_12); y -= 16.0f;
-    sprintf(buf, "bank %.1f deg   scale (%.3f, %.3f)", shipBankDeg, shipSx, shipSy);
+    snprintf(buf, sizeof(buf), "bank %.1f deg   scale (%.3f, %.3f)", shipBankDeg, shipSx, shipSy);
     renderGlText(x + 10, y, buf, GLUT_BITMAP_HELVETICA_12); y -= 24.0f;
 
     glColor3f(1.0f, 0.85f, 0.2f);
@@ -1394,9 +1396,9 @@ void drawCgLabPanel()
     {
         const Enemy& e = enemies[lockedEnemy];
         float dx = e.x - playerX, dy = e.y - playerY;
-        sprintf(buf, "enemy at (%.0f, %.0f)   distance %.0f px", e.x, e.y, sqrtf(dx * dx + dy * dy));
+        snprintf(buf, sizeof(buf), "enemy at (%.0f, %.0f)   distance %.0f px", e.x, e.y, sqrtf(dx * dx + dy * dy));
         renderGlText(x + 10, y, buf, GLUT_BITMAP_HELVETICA_12); y -= 15.0f;
-        sprintf(buf, "sway: x = %.0f + 40 sin(0.03 f + %.0f)", e.homeX, e.wobbleOffset);
+        snprintf(buf, sizeof(buf), "sway: x = %.0f + 40 sin(0.03 f + %.0f)", e.homeX, e.wobbleOffset);
         renderGlText(x + 10, y, buf, GLUT_BITMAP_HELVETICA_12); y -= 24.0f;
     }
     else
@@ -1407,7 +1409,7 @@ void drawCgLabPanel()
     glColor3f(1.0f, 0.85f, 0.2f);
     renderGlText(x + 10, y, "Cohen-Sutherland (radar sweep end-point)", GLUT_BITMAP_HELVETICA_10); y -= 15.0f;
     glColor3f(0.9f, 0.95f, 1.0f);
-    sprintf(buf, "outcode start %d%d%d%d   end %d%d%d%d",
+    snprintf(buf, sizeof(buf), "outcode start %d%d%d%d   end %d%d%d%d",
             (sweepOc0 >> 3) & 1, (sweepOc0 >> 2) & 1, (sweepOc0 >> 1) & 1, sweepOc0 & 1,
             (sweepOc1 >> 3) & 1, (sweepOc1 >> 2) & 1, (sweepOc1 >> 1) & 1, sweepOc1 & 1);
     renderGlText(x + 10, y, buf, GLUT_BITMAP_HELVETICA_12); y -= 24.0f;
@@ -1417,7 +1419,7 @@ void drawCgLabPanel()
     for (int i = 0; i < 4; i++)
     {
         if (states[i]) glColor3f(0.3f, 1.0f, 0.5f); else glColor3f(0.55f, 0.6f, 0.7f);
-        sprintf(buf, "%s : %s", names[i], states[i] ? "ON" : "off");
+        snprintf(buf, sizeof(buf), "%s : %s", names[i], states[i] ? "ON" : "off");
         renderGlText(x + 10, y, buf, GLUT_BITMAP_HELVETICA_12); y -= 15.0f;
     }
 }
@@ -1784,7 +1786,7 @@ void drawHowItWorks()
     glColor3f(1.0f, 1.0f, 1.0f);
     renderGlText(24.0f, HEIGHT - 33.0f, p.title, GLUT_BITMAP_HELVETICA_18);
     char pg[32];
-    sprintf(pg, "page %d / %d", hiwPage + 1, HIW_PAGES);
+    snprintf(pg, sizeof(pg), "page %d / %d", hiwPage + 1, HIW_PAGES);
     glColor3f(1.0f, 0.8f, 0.3f);
     renderGlText(WIDTH - 110.0f, HEIGHT - 33.0f, pg, GLUT_BITMAP_HELVETICA_12);
 
@@ -1799,8 +1801,8 @@ void drawHowItWorks()
     for (int k = 0; k < p.nCode; k++)
     {
         float y = top - 17.0f - k * LH;
-        char num[8];
-        sprintf(num, "%2d", k + 1);
+        char num[12];
+        snprintf(num, sizeof(num), "%2d", k + 1);
         glColor3f(0.95f, 0.75f, 0.3f);
         renderGlText(22.0f, y, num, GLUT_BITMAP_8_BY_13);
 
@@ -1854,8 +1856,8 @@ void drawGameOver()
 
     char finalScore[64];
     char finalWave[64];
-    sprintf(finalScore, "Final Score: %d", score);
-    sprintf(finalWave, "Sector Reached: %s", sectorThemes[currentSector % NUM_SECTORS].name);
+    snprintf(finalScore, sizeof(finalScore), "Final Score: %d", score);
+    snprintf(finalWave, sizeof(finalWave), "Sector Reached: %s", sectorThemes[currentSector % NUM_SECTORS].name);
 
     glColor3f(1.0f, 1.0f, 1.0f);
     renderGlText(WIDTH / 2 - 60, HEIGHT / 2 + 80, finalScore);
@@ -1869,7 +1871,7 @@ void drawGameOver()
     else if (lastRunRank > 1)
     {
         char rankBuf[48];
-        sprintf(rankBuf, "You placed #%d on the leaderboard!", lastRunRank);
+        snprintf(rankBuf, sizeof(rankBuf), "You placed #%d on the leaderboard!", lastRunRank);
         glColor3f(0.55f, 0.9f, 1.0f);
         renderGlText(WIDTH / 2 - 105, HEIGHT / 2 + 15, rankBuf, GLUT_BITMAP_HELVETICA_12);
     }
@@ -1948,12 +1950,12 @@ void drawLeaderboard()
         else if (i == 2) { r = 0.90f; g = 0.58f; b = 0.25f; }
 
         char buf[40];
-        sprintf(buf, "#%d", i + 1);
+        snprintf(buf, sizeof(buf), "#%d", i + 1);
         renderTextOutlined(colRank, rowY, buf, GLUT_BITMAP_HELVETICA_18, r, g, b);
         renderTextOutlined(colName, rowY, e.pilotName.c_str(), GLUT_BITMAP_HELVETICA_18, 1.0f, 1.0f, 1.0f);
-        sprintf(buf, "%d", e.score);
+        snprintf(buf, sizeof(buf), "%d", e.score);
         renderTextOutlined(colScore, rowY, buf, GLUT_BITMAP_HELVETICA_18, 0.45f, 1.0f, 0.55f);
-        sprintf(buf, "%d", e.sector);
+        snprintf(buf, sizeof(buf), "%d", e.sector);
         renderTextOutlined(colSector + 20.0f, rowY, buf, GLUT_BITMAP_HELVETICA_18, 0.9f, 0.75f, 1.0f);
         renderTextOutlined(colDate, rowY, e.date.c_str(), GLUT_BITMAP_HELVETICA_12, 0.75f, 0.82f, 0.92f);
 
@@ -2561,11 +2563,11 @@ void simulateFrame()
                         score += pointAward;
                         if (score > highScore) highScore = score;
 
-                        char ptsStr[24];
+                        char ptsStr[32];
                         if (comboCount > 1)
-                            sprintf(ptsStr, "+%d (x%d)", pointAward, comboCount);
+                            snprintf(ptsStr, sizeof(ptsStr), "+%d (x%d)", pointAward, comboCount);
                         else
-                            sprintf(ptsStr, "+%d", pointAward);
+                            snprintf(ptsStr, sizeof(ptsStr), "+%d", pointAward);
 
                         addFloatingText(enemies[j].x, enemies[j].y + 15.0f, ptsStr, 1.0f, 0.9f, 0.2f);
                         triggerShake(enemies[j].type == 2 ? 5.0f : enemies[j].type == 1 ? 3.5f : 2.0f);
@@ -2734,6 +2736,7 @@ void simulateFrame()
     {
         // Update background & particles even while paused / menus
         animFrame++;
+        if (gameOverInputLock > 0) gameOverInputLock--;
         updateStars();
         updateParticles();
         updateFloatingTexts();
@@ -3055,6 +3058,15 @@ void keyboardDown(unsigned char key, int /*x*/, int /*y*/)
             {
                 spacePressed = true;
             }
+            else if (spacePressed)
+            {
+                // Fire key still held down from gameplay (keyboard auto-repeat):
+                // don't let it press a menu button. Release it first.
+            }
+            else if (currentGameState == STATE_GAME_OVER && gameOverInputLock > 0)
+            {
+                // Game Over just appeared: ignore Space/Enter for a moment
+            }
             else if (currentGameState == STATE_MAIN_MENU)
             {
                 activateMainMenu(menuSelectedIdx);
@@ -3163,6 +3175,7 @@ void keyboardUp(unsigned char key, int /*x*/, int /*y*/)
             break;
 
         case ' ':
+        case 13:   // Enter fires too, so releasing it must stop firing
             spacePressed = false;
             break;
     }
@@ -3478,6 +3491,11 @@ int main(int argc, char** argv)
     glutInitWindowSize(WIDTH, HEIGHT);
     glutInitWindowPosition(100, 50);
     glutCreateWindow("VECTOR STORM - A Computer Graphics Showcase Shooter");
+
+    // Ignore the keyboard's auto-repeat: holding a key is tracked with flags
+    // (move / fire), and auto-repeated Space/Enter would otherwise "click" menu
+    // buttons by itself, e.g. skip the Game Over screen while you hold fire.
+    glutIgnoreKeyRepeat(1);
 
     init();
     SaveSystem::init();                             // settings + leaderboard from disk
