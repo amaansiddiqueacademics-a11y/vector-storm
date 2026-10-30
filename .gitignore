@@ -1,0 +1,38 @@
+# Binaries & Executables
+*.exe
+*.dll
+*.so
+*.dylib
+# ...except the ready-to-run Windows build and its one runtime DLL
+!/game.exe
+!/libfreeglut.dll
+# Linux/macOS build output
+/game
+
+# Object files & Libraries
+*.o
+*.obj
+*.a
+*.lib
+
+# Build directories
+build/
+bin/
+out/
+.cache/
+
+# IDE & Editor files
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs & Dumps
+*.log
+*.dmp
+
+# Player save data (created next to the game when you play)
+scores.dat
+settings.cfg
