@@ -1,4 +1,13 @@
-﻿# VECTOR STORM - A 2D Computer Graphics Shooter
+# VECTOR STORM - A 2D Computer Graphics Shooter
+
+[![Build](https://github.com/amaansiddiqueacademics-a11y/vector-storm/actions/workflows/build.yml/badge.svg)](https://github.com/amaansiddiqueacademics-a11y/vector-storm/actions/workflows/build.yml)
+[![Download](https://img.shields.io/github/v/release/amaansiddiqueacademics-a11y/vector-storm?label=download&color=orange)](https://github.com/amaansiddiqueacademics-a11y/vector-storm/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey)
+![C++11](https://img.shields.io/badge/C%2B%2B-11-00599C)
+![OpenGL](https://img.shields.io/badge/OpenGL-FreeGLUT-5586A4)
+
+<p align="center"><img src="docs/screenshots/gameplay.gif" alt="VECTOR STORM gameplay: the player's plane dodging and shooting enemy planes over the desert planet" width="560"></p>
 
 A colourful, easy-to-read 2D plane shooter written in C++ with OpenGL and FreeGLUT. You fly a cartoon fighter plane over a different planet in every sector, shoot waves of enemy planes, collect power-ups and beat a boss to move on. Every picture is drawn in code (polygons, triangles, circles and lines) - there are no image files, and the sound is synthesised too.
 
@@ -12,7 +21,27 @@ The main menu also has a **LEADERBOARD** with your top 10 runs, which are saved 
 
 ## Quick start (Windows)
 
-Download or clone the repository and double-click **`game.exe`**. Keep `libfreeglut.dll` in the same folder; nothing else needs to be installed (works on a clean Windows 10/11 PC).
+1. Download **`VectorStorm-...-windows.zip`** from the [latest release](https://github.com/amaansiddiqueacademics-a11y/vector-storm/releases/latest).
+2. Extract it and double-click **`game.exe`**.
+
+Keep `libfreeglut.dll` in the same folder; nothing else needs to be installed (works on a clean Windows 10/11 PC). You can also clone the repository and run the `game.exe` in it.
+
+## Screenshots
+
+| | |
+| :---: | :---: |
+| ![Main menu](docs/screenshots/main-menu.png) | ![Boss fight](docs/screenshots/boss.png) |
+| Main menu | Sector boss |
+| ![CG Lab panel](docs/screenshots/cg-lab-panel.png) | ![Leaderboard](docs/screenshots/leaderboard.png) |
+| F1 CG Lab panel: live model matrix, target lock, radar | Saved top-10 leaderboard |
+| ![HOW IT WORKS](docs/screenshots/how-it-works.png) | ![CG CONCEPTS](docs/screenshots/cg-concepts.png) |
+| HOW IT WORKS: the game's own code, explained | CG CONCEPTS used in the game |
+
+**The five planets**
+
+| ![Earth coast](docs/screenshots/sector1.png) | ![Desert planet](docs/screenshots/sector2.png) | ![Ice planet](docs/screenshots/sector3.png) | ![Volcano planet](docs/screenshots/sector4.png) | ![Deep space](docs/screenshots/sector5.png) |
+| :---: | :---: | :---: | :---: | :---: |
+| 1. Earth coast | 2. Desert | 3. Ice | 4. Volcano | 5. Deep space |
 
 ## How to play
 
@@ -133,6 +162,8 @@ vector-storm/
   build.bat, Makefile, CMakeLists.txt   Build files
   ROADMAP.md                        What is done and ideas for later
   game.exe, libfreeglut.dll         Ready-to-run Windows build
+  docs/screenshots/                 Images used in this README
+  .github/workflows/build.yml       Automatic Windows + Linux builds, and releases
 ```
 
 ### Game loop
@@ -147,3 +178,26 @@ vector-storm/
 - **Look:** `drawPlayer()` and `drawEnemyPlane()` for the planes; the palette table and scenery functions in `Starfield.cpp` for the worlds.
 
 See [ROADMAP.md](ROADMAP.md) for what is done and what could come next.
+
+## Releases
+
+Every push to `main` is built automatically on Windows (MSYS2) and Linux by [GitHub Actions](.github/workflows/build.yml). To publish a new downloadable version, push a version tag:
+
+```sh
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+The workflow then builds the game and attaches `VectorStorm-v1.1.0-windows.zip` (game.exe, libfreeglut.dll, README, LICENSE) to a new release.
+
+## Team
+
+| Member | Contributions |
+| :--- | :--- |
+| **Amaan Siddique** | Merged the redesign and save-system branches, build and bug fixes, code cleanup, CI and releases |
+| **Sairaj Khandagale** | Original game and core systems (audio, graphics, power-ups, particles, sectors), save system, leaderboard |
+| **Abdul Hakim Shaikh** | Cartoon 2D redesign: planet sectors, readable menus, wave enemies, HOW IT WORKS code walkthrough screens |
+
+## License
+
+[MIT](LICENSE) - free to use, change and share, as long as the copyright notice stays in. `libfreeglut.dll` is [FreeGLUT](https://freeglut.sourceforge.net/), under its own MIT/X11-style license.

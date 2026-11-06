@@ -20,6 +20,9 @@ What the team has built so far, and ideas for later.
 | Radar minimap (F1) and debug views (F1 FPS panel, F4 paths + hitboxes) | `drawRadar()`, `drawCgLabPanel()`, `drawDebugOverlay()` |
 | Standalone Windows build (only `libfreeglut.dll` needed) | `build.bat`, `Makefile`, `CMakeLists.txt` |
 | Linux build (silent audio) | `Makefile`, `CMakeLists.txt` |
+| Automatic Windows + Linux builds on every push, tag-triggered downloadable releases | `.github/workflows/build.yml` |
+| README screenshots and gameplay GIF | `docs/screenshots/` |
+| MIT license | `LICENSE` |
 
 ## Ideas not started
 
