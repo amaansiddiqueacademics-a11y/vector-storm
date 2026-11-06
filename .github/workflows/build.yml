@@ -1,0 +1,108 @@
+name: Build
+
+# Builds the game on every push / pull request, on Windows (MSYS2, the same
+# toolchain the README tells players to install) and on Linux.
+# Pushing a tag like v1.0.0 also publishes a GitHub Release with a
+# ready-to-play Windows zip.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows (MSYS2 UCRT64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            make
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-freeglut
+
+      - name: Build with make
+        run: |
+          rm -f game.exe
+          make CXXFLAGS="-O2 -Wall -Wextra -std=c++11"
+
+      - name: Check game.exe only needs libfreeglut.dll
+        run: |
+          objdump -p game.exe | grep "DLL Name"
+          if objdump -p game.exe | grep -qiE "libwinpthread|libstdc\+\+|libgcc_s"; then
+            echo "::error::game.exe depends on a MinGW runtime DLL that is not shipped"
+            exit 1
+          fi
+
+      - name: Build with build.bat
+        run: |
+          rm -f game.exe
+          cmd //c build.bat
+          test -f game.exe
+
+      - name: Package
+        run: |
+          mkdir -p dist/VectorStorm
+          cp game.exe /ucrt64/bin/libfreeglut.dll README.md LICENSE dist/VectorStorm/
+          cd dist && zip -r VectorStorm-windows.zip VectorStorm
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VectorStorm-windows
+          path: dist/VectorStorm-windows.zip
+
+  linux:
+    name: Linux (make + CMake)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install FreeGLUT
+        run: sudo apt-get update && sudo apt-get install -y freeglut3-dev
+
+      - name: Build with make
+        run: make CXXFLAGS="-O2 -Wall -Wextra -std=c++11"
+
+      - name: Build with CMake
+        run: |
+          cmake -B build
+          cmake --build build
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: VectorStorm-windows
+
+      - name: Name the zip after the version
+        run: mv VectorStorm-windows.zip "VectorStorm-${GITHUB_REF_NAME}-windows.zip"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: VECTOR STORM ${{ github.ref_name }}
+          files: VectorStorm-${{ github.ref_name }}-windows.zip
+          body: |
+            **Play on Windows:** download the zip below, extract it, and double-click `game.exe`
+            (keep `libfreeglut.dll` in the same folder). Nothing else needs to be installed.
+
+            Built automatically from this tag with MSYS2 UCRT64.
+            To build it yourself or play on Linux, see the README.
