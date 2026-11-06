@@ -2,8 +2,10 @@ name: Build
 
 # Builds the game on every push / pull request, on Windows (MSYS2, the same
 # toolchain the README tells players to install) and on Linux.
-# Pushing a tag like v1.0.0 also publishes a GitHub Release with a
-# ready-to-play Windows zip.
+#
+# Releases: when main is pushed and the version in the VERSION file has no
+# release yet, a GitHub Release "v<VERSION>" is created (tag included) with a
+# ready-to-play Windows zip. Pushing a tag like v1.2.0 works too.
 
 on:
   push:
@@ -84,26 +86,51 @@ jobs:
 
   release:
     name: Publish release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push'
     needs: [windows, linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v5
+
+      - name: Decide the version
+        id: ver
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG="$GITHUB_REF_NAME"
+          else
+            TAG="v$(tr -d '[:space:]' < VERSION)"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $TAG already exists - nothing to publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/download-artifact@v5
+        if: steps.ver.outputs.publish == 'true'
         with:
           name: VectorStorm-windows
 
       - name: Name the zip after the version
-        run: mv VectorStorm-windows.zip "VectorStorm-${GITHUB_REF_NAME}-windows.zip"
+        if: steps.ver.outputs.publish == 'true'
+        run: mv VectorStorm-windows.zip "VectorStorm-${{ steps.ver.outputs.tag }}-windows.zip"
 
       - uses: softprops/action-gh-release@v2
+        if: steps.ver.outputs.publish == 'true'
         with:
-          name: VECTOR STORM ${{ github.ref_name }}
-          files: VectorStorm-${{ github.ref_name }}-windows.zip
+          tag_name: ${{ steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: VECTOR STORM ${{ steps.ver.outputs.tag }}
+          files: VectorStorm-${{ steps.ver.outputs.tag }}-windows.zip
           body: |
             **Play on Windows:** download the zip below, extract it, and double-click `game.exe`
             (keep `libfreeglut.dll` in the same folder). Nothing else needs to be installed.
 
-            Built automatically from this tag with MSYS2 UCRT64.
+            Built automatically with MSYS2 UCRT64 from commit ${{ github.sha }}.
             To build it yourself or play on Linux, see the README.

@@ -164,6 +164,7 @@ vector-storm/
   game.exe, libfreeglut.dll         Ready-to-run Windows build
   docs/screenshots/                 Images used in this README
   .github/workflows/build.yml       Automatic Windows + Linux builds, and releases
+  VERSION                           Version number; bump it to publish a release
 ```
 
 ### Game loop
@@ -181,14 +182,9 @@ See [ROADMAP.md](ROADMAP.md) for what is done and what could come next.
 
 ## Releases
 
-Every push to `main` is built automatically on Windows (MSYS2) and Linux by [GitHub Actions](.github/workflows/build.yml). To publish a new downloadable version, push a version tag:
+Every push to `main` is built automatically on Windows (MSYS2) and Linux by [GitHub Actions](.github/workflows/build.yml).
 
-```sh
-git tag v1.1.0
-git push origin v1.1.0
-```
-
-The workflow then builds the game and attaches `VectorStorm-v1.1.0-windows.zip` (game.exe, libfreeglut.dll, README, LICENSE) to a new release.
+To publish a new downloadable version, change the number in the [`VERSION`](VERSION) file (for example `1.1.0`) and push to `main`. The workflow builds the game and creates release `v1.1.0` with `VectorStorm-v1.1.0-windows.zip` (game.exe, libfreeglut.dll, README, LICENSE). Pushing a tag such as `v1.1.0` works too. A version that already has a release is never published twice.
 
 ## Team
 
