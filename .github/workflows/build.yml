@@ -23,7 +23,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -31,6 +31,7 @@ jobs:
           update: true
           install: >-
             make
+            zip
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-freeglut
 
@@ -59,7 +60,7 @@ jobs:
           cp game.exe /ucrt64/bin/libfreeglut.dll README.md LICENSE dist/VectorStorm/
           cd dist && zip -r VectorStorm-windows.zip VectorStorm
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: VectorStorm-windows
           path: dist/VectorStorm-windows.zip
@@ -68,7 +69,7 @@ jobs:
     name: Linux (make + CMake)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install FreeGLUT
         run: sudo apt-get update && sudo apt-get install -y freeglut3-dev
@@ -89,7 +90,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: VectorStorm-windows
 
